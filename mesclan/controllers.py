@@ -7,8 +7,9 @@ from functools import wraps
 from flask import request
 from ujson import dumps
 
-from mesclan.constants import DEBUG_TOKEN, GET_BOTTLE_FIELDS
 from mesclan import exceptions
+from mesclan.constants import DEBUG_TOKEN, GET_BOTTLE_FIELDS
+from mesclan.store import get_bottle
 
 
 def handle_request(func):
@@ -26,7 +27,7 @@ def handle_request(func):
 
 
 def create_routes(app):
-    @app.route("/", methods=["POST"])
+    @app.route("/bottle", methods=["POST"])
     @handle_request
     def get_bottle_info():
         """
@@ -34,7 +35,7 @@ def create_routes(app):
         """
         _validate_fields(GET_BOTTLE_FIELDS)
         _validate_token()
-        # RETURN some kind of translated redis obj
+        return dumps(get_bottle(request.form["id"]))
 
     def _validate_fields(fields):
         """

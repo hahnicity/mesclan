@@ -2,7 +2,7 @@
 mesclan.globals
 ~~~~~~~~~~~~~
 """
-from peak.util.proxies import CallbackProxy
-from mesclan.context import context
+from mesclan.context import get_global_object
 
-db = CallbackProxy(lambda: context["db"])
+
+redis = get_global_object("redis")

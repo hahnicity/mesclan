@@ -7,8 +7,8 @@ from os import environ
 
 from mesclan.app import make_app
 from mesclan.configure import configure_app
-from mesclan.db import make_db
 from mesclan.context import mesclan_context
+from mesclan.store import get_redis
 
 
 def build_parser():
@@ -52,7 +52,7 @@ def main():
     Console Entry point
     """
     app = make_app()
-    with mesclan_context(db=make_db(app)):
+    with mesclan_context(redis=get_redis()):
         args = build_parser().parse_args()
         configure_app(app, args)
         app.run(host=app.config["HOST"], port=int(environ.get("PORT", 5000)))

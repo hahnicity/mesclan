@@ -2,9 +2,8 @@
 mesclan.context
 ~~~~~~~~~~~~~~~~
 """
-from peak.util.proxies import ObjectProxy
+from peak.util.proxies import CallbackProxy, ObjectProxy
 
-from mesclan import constants
 from mesclan.attributes import AttributeDict
 
 context = ObjectProxy(None)
@@ -41,3 +40,10 @@ def mesclan_context(**kwargs):
     Initialize the context manager
     """
     return Context(**kwargs)
+
+
+def get_global_object(obj):
+    """
+    Return a global object of our choosing
+    """
+    return CallbackProxy(lambda: context[obj])
