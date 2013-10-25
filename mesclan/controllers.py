@@ -37,6 +37,14 @@ def create_routes(app):
         _validate_token()
         return dumps(get_bottle(request.form["id"]))
 
+    @app.route("/", methods=["GET"])
+    @handle_request
+    def ensure_server_is_up():
+        """
+        Basically a debug method because heroku sucks
+        """
+        return dumps({"response": "Yay!"})
+
     def _validate_fields(fields):
         """
         Validate that correct parameters for a POST request were sent
