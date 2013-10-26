@@ -19,8 +19,10 @@ setup(
     install_requires=[
         "flask",
         "flask-heroku",
+        "flask-sqlalchemy",
         "hiredis",
         "ProxyTypes>=0.9,<1.0",
+        "psycopg2",
         "redis",
         "requests",
         "ujson",

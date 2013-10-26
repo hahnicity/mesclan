@@ -20,10 +20,6 @@ def generate_csv(rows, columns, entry_length):
     Generate a csv document with rows and columns of mock data
     """
     with open("mockdata.csv", "w") as file_:
-        # Write field types, 10 is arbitrary
-        file_.write("{}\n".format(",".join(
-            ["id"] + [generate_string(10) for _ in xrange(columns - 1)])
-        ))
         for number in xrange(rows):
             line = ",".join(
                 [str(number)] +

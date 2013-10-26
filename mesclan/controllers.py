@@ -9,7 +9,7 @@ from ujson import dumps
 
 from mesclan import exceptions
 from mesclan.constants import DEBUG_TOKEN, GET_BOTTLE_FIELDS
-from mesclan.store import get_bottle
+from mesclan.handlers import handle_bottle_info
 
 
 def handle_request(func):
@@ -35,15 +35,7 @@ def create_routes(app):
         """
         _validate_fields(GET_BOTTLE_FIELDS)
         _validate_token()
-        return dumps(get_bottle(request.form["id"]))
-
-    @app.route("/", methods=["GET"])
-    @handle_request
-    def ensure_server_is_up():
-        """
-        Basically a debug method because heroku sucks
-        """
-        return dumps({"response": "Yay!"})
+        return handle_bottle_info(request.form["id"])
 
     def _validate_fields(fields):
         """
