@@ -14,7 +14,9 @@ from sqlalchemy.exc import IntegrityError
 
 from mesclan import data
 from mesclan.cache import redis_set
-from mesclan.constants import ARBITRARY_LIMIT, CACHE_BYTE_MARGIN, DELIMITER, MAX_CACHE_SPACE
+from mesclan.constants import (
+    ARBITRARY_LIMIT, CACHE_BYTE_MARGIN, DELIMITER, MAX_CACHE_SPACE
+)
 from mesclan.globals import postgresql, redis
 from mesclan.schema import Cellar
 
@@ -65,30 +67,40 @@ def build_cache():
         # End of memory
         return redis.info()["used_memory"] + CACHE_BYTE_MARGIN >= MAX_CACHE_SPACE
 
-    if is_close_to_eom():
-        # XXX log under info
-        return
+    # Clear the cache first
+    redis.flushdb()
 
     with execute_session() as session:
-        items = iter(session.query(Cellar).
-                     order_by(Cellar.total_views).limit(ARBITRARY_LIMIT).all())
+        items = iter(
+            session.query(Cellar).
+            order_by(Cellar.total_views.desc()).
+            limit(ARBITRARY_LIMIT).all()
+        )
         while not is_close_to_eom():
             try:
-                to_add = filter_for_valid_keys(items.next().__dict__)
+                to_add = sqla_obj_to_dict(items.next())
             except StopIteration:
                 break
             else:
                 # XXX Log as debug
                 redis_set(to_add["id"], to_add)
+        # XXX log finished with cache as debug
 
 
-def filter_for_valid_keys(dict_):
-    new_dict = dict(dict_)
-    del_keys = [key for key in new_dict.iterkeys() if key.startswith("_")]
+def sqla_obj_to_dict(obj):
+    """
+    Convert a SQLAlchemy row entry to a dictionary.
+
+    Just using row.__dict__ is not sufficient for actually caching an object
+    in redis. We must manually convert the row into a dictionary type
+    """
+    dict_ = dict(obj.__dict__)
+    # SQLA has objects in __dict__ that are not actually columns, filter them
+    del_keys = [key for key in dict_.iterkeys() if key.startswith("_")]
     for key in del_keys:
-        del new_dict[key]
+        del dict_[key]
 
-    return new_dict
+    return dict_
 
 
 def load_data():
@@ -107,7 +119,7 @@ def get_csv_files(dir_):
     """
     Get all csv files in a directory
     """
-    return [branch for branch in listdir(dir_) if re.findall(".*csv", branch)]
+    return [branch for branch in listdir(dir_) if re.search(".*csv", branch)]
 
 
 def translate_data(csv_file):

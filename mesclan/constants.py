@@ -2,7 +2,7 @@
 mesclan.constants
 ~~~~~~~~~~~~~~~~~
 """
-ARBITRARY_LIMIT = 1000
+ARBITRARY_LIMIT = 5000
 CACHE_BYTE_MARGIN = 5000
 DEBUG_TOKEN = "DEBUG"
 DELIMITER = ","

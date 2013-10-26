@@ -4,7 +4,8 @@ mesclan.controllers
 """
 from functools import wraps
 
-from flask import request
+from flask import request, Response
+from sqlalchemy.orm.exc import NoResultFound
 from ujson import dumps
 
 from mesclan import exceptions
@@ -17,6 +18,8 @@ def handle_request(func):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
+        except NoResultFound:
+            return Response(status=204)
         except exceptions.BAD_REQUEST_ERRORS as error:
             return dumps({"response": error.message}), 400
         except exceptions.InvalidTokenError as error:
@@ -31,11 +34,22 @@ def create_routes(app):
     @handle_request
     def get_bottle_info():
         """
-        Handle login for customers to the app
+        Get information for a bottle
         """
         _validate_fields(GET_BOTTLE_FIELDS)
         _validate_token()
         return handle_bottle_info(request.form["id"])
+
+    @app.route("/trigger-task/update-cache", methods=["GET"])
+    def update_cache():
+        """
+        Update our cache
+        """
+        # XXX Ug
+        from mesclan.postgres import build_cache
+
+        build_cache()
+        return Response(status=200)
 
     def _validate_fields(fields):
         """

@@ -33,6 +33,4 @@ def redis_get(id):
     """
     Get a bottle's information from given its unique id
     """
-    print "REDIS", id
-    print redis.get(id)
     return loads(redis.get(id))
