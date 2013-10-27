@@ -3,6 +3,7 @@ mesclan.controllers
 ~~~~~~~~~~~~~~~~~
 """
 from functools import wraps
+import logging
 
 from flask import request, Response
 from sqlalchemy.orm.exc import NoResultFound
@@ -11,6 +12,7 @@ from ujson import dumps
 from mesclan import exceptions
 from mesclan.constants import DEBUG_TOKEN, GET_BOTTLE_FIELDS
 from mesclan.handlers import handle_bottle_info
+from mesclan.postgres import build_cache
 
 
 def handle_request(func):
@@ -36,6 +38,7 @@ def create_routes(app):
         """
         Get information for a bottle
         """
+        logging.debug("A request was generated for bottle id: {}".format(request.form["id"]))
         _validate_fields(GET_BOTTLE_FIELDS)
         _validate_token()
         return handle_bottle_info(request.form["id"])
@@ -45,9 +48,7 @@ def create_routes(app):
         """
         Update our cache
         """
-        # XXX Ug
-        from mesclan.postgres import build_cache
-
+        logging.info("Updating the cache per request")
         build_cache()
         return Response(status=200)
 

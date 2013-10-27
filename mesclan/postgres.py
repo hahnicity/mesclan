@@ -6,6 +6,7 @@ As the name suggests handles all Postgres functions
 """
 from contextlib import contextmanager
 import csv
+import logging
 from os import listdir
 from os.path import dirname, join
 import re
@@ -25,7 +26,7 @@ def add_and_commit(session, item):
     """
     Add an item to the postgres DB and then commit it
     """
-    # XXX Log under info
+    logging.debug("Add {} to the DB".format(item.__dict__))
     session.add(item)
     session.commit()
 
@@ -52,8 +53,7 @@ def make_schema():
     try:
         load_data()
     except IntegrityError:
-        # XXX Log as WARN!
-        pass
+        logging.warn("We were unable to load new data because there is existing data in the db")
     build_cache()
 
 
@@ -82,9 +82,9 @@ def build_cache():
             except StopIteration:
                 break
             else:
-                # XXX Log as debug
+                logging.debug("Add {} to the cache".format(to_add))
                 redis_set(to_add["id"], to_add)
-        # XXX log finished with cache as debug
+        logging.info("Finished adding items to the cache")
 
 
 def sqla_obj_to_dict(obj):
@@ -109,9 +109,8 @@ def load_data():
     """
     csv_files = get_csv_files(dirname(data.__file__))
     for csv_file in csv_files:
-        # XXX Log under debug
+        logging.info("Adding data from {} to the db".format(csv_file))
         with open(join(dirname(data.__file__), csv_file), "r") as csv_file:
-            # XXX Log under debug
             translate_data(csv_file)
 
 
@@ -130,4 +129,5 @@ def translate_data(csv_file):
     reader = csv.reader(csv_file, delimiter=DELIMITER)
     with execute_session() as session:
         for row in reader:
+            logging.debug("Adding id: {} name: {} to the DB".format(row[0], row[1]))
             add_and_commit(session, Cellar(id=row[0], name=row[1]))

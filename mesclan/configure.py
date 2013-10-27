@@ -2,10 +2,13 @@
 mesclan.configure
 ~~~~~~~~~~~~~~~
 """
+from logging.config import dictConfig
+
 from flask.ext.heroku import Heroku
 
 from mesclan.constants import LOCAL_POSTGRES_URL
 from mesclan.controllers import create_routes
+from mesclan.defaults import logconfig
 
 
 def configure_app(app, args):
@@ -15,8 +18,7 @@ def configure_app(app, args):
     app.debug = args.debug
     app.testing = args.testing
     app.config["HOST"] = get_host(args)
-
-    # Configure database
+    configure_logging(args)
     configure_database(app)
 
     # Create all application controllers
@@ -31,6 +33,16 @@ def configure_database(app):
         app.config["SQLALCHEMY_DATABASE_URI"] = LOCAL_POSTGRES_URL
     else:
         Heroku(app)
+
+
+def configure_logging(args):
+    """
+    If we specified  -v then set to INFO, if -vv then DEBUG, if something like
+    -vvv or anything else set to DEBUG
+    """
+    level = {None: "WARN", 1: "INFO", 2: "DEBUG"}[args.verbosity]
+    logconfig["root"]["level"] = level
+    dictConfig(logconfig)
 
 
 def get_host(args):

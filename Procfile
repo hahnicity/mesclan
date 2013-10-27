@@ -1,1 +1,1 @@
-web: python mesclan/main.py
+web: python mesclan/main.py -v

@@ -7,7 +7,6 @@ from os import environ
 
 from mesclan.app import make_app
 from mesclan.cache import new_redis
-from mesclan.configure import configure_app
 from mesclan.context import mesclan_context
 from mesclan.db import make_postgresql
 
@@ -46,6 +45,12 @@ def add_other_arguments(parser):
         help="Enable exception logging and usage of mocks for configuration functions",
         action="store_true",
     )
+    others.add_argument(
+        "-v",
+        "--verbosity",
+        action="count",
+        help="Logging verbosity. Specify -v for INFO and -vv for DEBUG",
+    )
 
 
 def main():
@@ -54,6 +59,7 @@ def main():
     """
     app = make_app()
     with mesclan_context(redis=new_redis(), postgresql=make_postgresql(app)):
+        from mesclan.configure import configure_app
         from mesclan.postgres import make_schema
         args = build_parser().parse_args()
         configure_app(app, args)
