@@ -14,11 +14,8 @@ import re
 from sqlalchemy.exc import IntegrityError
 
 from mesclan import data
-from mesclan.cache import redis_set
-from mesclan.constants import (
-    ARBITRARY_LIMIT, CACHE_BYTE_MARGIN, DELIMITER, MAX_CACHE_SPACE
-)
-from mesclan.globals import postgresql, redis
+from mesclan.constants import DELIMITER
+from mesclan.globals import postgresql
 from mesclan.schema import Cellar
 
 
@@ -54,37 +51,19 @@ def make_schema():
         load_data()
     except IntegrityError:
         logging.warn("We were unable to load new data because there is existing data in the db")
-    build_cache()
 
 
-def build_cache():
+def get_rows_by_total_views(limit):
     """
     Builds our initial cache in redis
 
     This is not a postgres function, but I'm trying to avoid import errors
     """
-    def is_close_to_eom():
-        # End of memory
-        return redis.info()["used_memory"] + CACHE_BYTE_MARGIN >= MAX_CACHE_SPACE
-
-    # Clear the cache first
-    redis.flushdb()
-
     with execute_session() as session:
-        items = iter(
-            session.query(Cellar).
-            order_by(Cellar.total_views.desc()).
-            limit(ARBITRARY_LIMIT).all()
-        )
-        while not is_close_to_eom():
-            try:
-                to_add = sqla_obj_to_dict(items.next())
-            except StopIteration:
-                break
-            else:
-                logging.debug("Add {} to the cache".format(to_add))
-                redis_set(to_add["id"], to_add)
-        logging.info("Finished adding items to the cache")
+        for obj in (session.query(Cellar).
+                    order_by(Cellar.total_views.desc()).
+                    limit(limit).all()):
+            yield obj
 
 
 def sqla_obj_to_dict(obj):
