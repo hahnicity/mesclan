@@ -37,5 +37,12 @@ class StatusCodeError(Exception):
         super(StatusCodeError, self).__init__(msg)
 
 
+class UserUnderageError(Exception):
+    def __init__(self):
+        super(StatusCodeError, self).__init__(
+            "The user is underage and is not able to use this service"
+        )
+
+
 BAD_REQUEST_ERRORS = (FieldNotFoundError, NoIDError, NoUserError)
 CONFLICT_ERRORS = (StatusCodeError,)
