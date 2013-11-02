@@ -66,6 +66,15 @@ def create_routes(app):
             if field not in request.form:
                 raise exceptions.FieldNotFoundError(field)
 
+    def _validate_response(response):
+        """
+        Validate our response from the Facebook API
+        """
+        if response.status_code != 200:
+            raise exceptions.StatusCodeError(response)
+        else:
+            return response
+
     def _validate_token():
         """
         Validate the token we get for requests to get information for a bottle
@@ -98,14 +107,12 @@ def create_routes(app):
         appsecret_proof.update(request.form["token"])
         appsecret_proof.update(oauth.SECRET)
         hash_ = appsecret_proof.digest()
-        response = requests.get(
+        response = _validate_response(requests.get(
             "{}/age_range?access_token={}".format(
                 urljoin(FACEBOOK_URL, request.form["user_id"]), request.form["token"]
             ),
             headers={"appsecret_proof", hash_}
-        )
+        ))
         # validate age, must be 21 in USA. Because we are making a liquor app...
-        if response.status_code != 200:
-            raise exceptions.StatusCodeError(response)
-        elif response.json()["min"] != "21":
+        if response.json()["min"] != "21":
             raise exceptions.UserUnderageError()
