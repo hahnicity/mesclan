@@ -6,9 +6,8 @@ from argparse import ArgumentParser
 from os import environ
 
 from mesclan.app import make_app
-from mesclan.cache import new_redis
+from mesclan.builders import new_postgresql, new_redis
 from mesclan.context import mesclan_context
-from mesclan.db import make_postgresql
 
 
 def build_parser():
@@ -58,12 +57,14 @@ def main():
     Console Entry point
     """
     app = make_app()
-    with mesclan_context(redis=new_redis(), postgresql=make_postgresql(app)):
+    with mesclan_context(redis=new_redis(), postgresql=new_postgresql(app)):
+        from mesclan.cache import build_cache
         from mesclan.configure import configure_app
         from mesclan.postgres import make_schema
         args = build_parser().parse_args()
         configure_app(app, args)
         make_schema()
+        build_cache()
         app.run(host=app.config["HOST"], port=int(environ.get("PORT", 5000)))
 
 
